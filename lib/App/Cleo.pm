@@ -52,7 +52,8 @@ sub run {
     };
 
     chomp @commands;
-    @commands = grep { /^\s*[^\#;]\S+/ } @commands;
+    # filter out empty lines and comments that begin w/ at least two #
+    @commands = grep { ! /^(\s*|\s*##.*)$/ } @commands;
 
     my $continue_to_end = 0;
 
