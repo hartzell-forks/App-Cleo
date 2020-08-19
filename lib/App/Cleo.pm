@@ -63,11 +63,15 @@ sub run {
         my $cmd = defined $commands[$i] ? $commands[$i] : die "no command $i";
         chomp $cmd;
 
-        my $keep_going = $cmd =~ s/^\.\.\.//;
-        my $run_in_background = $cmd =~ s/^!!!//;
+        # print the line and immediately execute it
+        my $print_and_go = $cmd =~ s/^\.\.\.//;
+        # print the line, wait for a keypress, and process the key
+        my $print_and_pause = $cmd =~ s/^;;;//;
+        # execute the line w/out printing it.
+        my $just_doit_quietly = $cmd =~ s/^!!!//;
 
         $self->do_cmd($cmd) and next CMD
-            if $run_in_background;
+            if $just_doit_quietly;
 
         no warnings 'redundant';
         my $prompt_state = $self->{state};
@@ -76,7 +80,7 @@ sub run {
         my @steps = split /%%%/, $cmd;
         while (my $step = shift @steps) {
 
-            my $should_pause = !($keep_going || $continue_to_end);
+            my $should_pause = !($print_and_go || $continue_to_end || $print_and_pause);
             my  $key  = $should_pause ? ReadKey(0) : '';
             if ($key  =~ /^\d$/) {
                 $key .= $1 while (ReadKey(0) =~ /^(\d)/);
@@ -95,7 +99,7 @@ sub run {
             print and usleep $self->{delay} for @chars;
         }
 
-        my $should_pause = !($keep_going || $continue_to_end);
+        my $should_pause = !($print_and_go || $continue_to_end);
         my  $key  = $should_pause ? ReadKey(0) : '';
         if ($key  =~ /^\d$/) {
             $key .= $1 while (ReadKey(0) =~ /^(\d)/);
